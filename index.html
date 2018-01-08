@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Calcul de l'avantage en nature pour les véhicules de société</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,500" rel="stylesheet" type="text/css">
+  <style>
+    body {font-family: 'Lato';}
+    fieldset {margin-bottom: 10px; border-width: 1px; border-color: #ccc; border-style: dashed}
+    legend {font-weight: bold; background: #fff; padding: 0 5px;}
+    ul {margin: 0; padding:0; list-style: none}
+    li:not(:last-child) {margin-bottom: 5px}
+    dt {font-weight: bold;}
+    dd {margin-left: 0}
+    dd:not(:last-child) {margin-bottom: 10px}
+  </style>
+</head>
+
+<body>
+  <fieldset>
+    <legend>Le véhicule</legend>
+
+    <ul>
+      <li>
+        <label>
+          <input type="radio" value="bought_new" name="autoType[]" checked> Véhicule acheté depuis - de 5 ans
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="radio" value="bought_old" name="autoType[]"> Véhicule acheté depuis + de 5 ans
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="radio" value="leasing" name="autoType[]"> Véhicule loué à l’année
+        </label>
+      </li>
+    </ul>
+  </fieldset>
+
+  <fieldset>
+    <legend>Le carburant</legend>
+
+    <ul>
+      <li>
+        <label>
+          <input type="radio" value="fuel_employee" name="fuelType[]" checked> Le salarié/dirigeant paie le carburant
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="radio" value="fuel_company" name="fuelType[]"> La société paie le carburant
+        </label>
+      </li>
+    </ul>
+  </fieldset>
+
+  <fieldset>
+    <legend>Les chiffres</legend>
+
+    <ul>
+      <li>
+        <label>
+          <input type="number" id="price" value="15000">
+          <span id="price_name">Prix d'achat</span>
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="number" id="insurance" value="1000"> Assurance annuelle
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="number" id="servicing" value="1200"> Entretien annuel
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="number" id="fuel" value="1500"> Carburant
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="number" id="mileage" value="30000"> Kilomètres parcourus
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="number" id="personal_mileage" value="10000"> Kilomètres parcourus à titre personnel
+        </label>
+      </li>
+    </ul>
+  </fieldset>
+
+  <p><b>Attention: ce calculateur moche n'a rien d'officiel, vérifiez toujours le calcul avec votre comptable !</b></p>
+
+  <dl>
+    <dt>Au forfait</dt>
+    <dd>
+      <span id="flat_rate"></span>€
+      <small>(<span id="flat_rate_month"></span>€ / mois)</small>
+      <br />
+      <span id="flat_rate_formula"></span>
+    </dd>
+
+    <dt>Frais réels</dt>
+    <dd>
+      <span id="real_expenses"></span>€
+      <small>(<span id="real_expenses_month"></span>€ / mois)</small>
+      <br />
+      <span id="real_expenses_formula"></span>
+    </dd>
+  </dl>
+
+  <script type=" text/javascript " src="script.js "></script>
+</body>
+
+</html>
