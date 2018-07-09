@@ -34,8 +34,8 @@ Array.from(autoTypeNodes).map(node => {
 
     const priceName = document.getElementById('price_name')
     priceName.innerHTML = autoType === 'leasing'
-      ? 'Frais de location annuels'
-      : "Prix d'achat"
+      ? 'Frais de location annuels TTC'
+      : "Prix d'achat TTC"
 
     calculate()
   })
@@ -44,6 +44,13 @@ Array.from(autoTypeNodes).map(node => {
 Array.from(fuelTypeNodes).map(node => {
   node.addEventListener('change', function (evt) {
     fuelType = evt.target.value
+
+    if (fuelType === 'fuel_employee') {
+      fueleNode.parentElement.parentElement.style.display = 'none'
+    } else {
+      fueleNode.parentElement.parentElement.style.display = 'block'
+    }
+
     calculate()
   })
 })
@@ -112,13 +119,14 @@ function calculate () {
       break
   }
 
-  const realExpenses = calculateRealExpenses()
-  showFormulas()
+  const expenses = calculateRealExpenses()
+
+  showFormulas(expenses)
 
   flatRateNode.innerHTML = parseInt(flatRate, 10)
   flatRateMonthNode.innerHTML = parseInt(flatRate / 12, 10)
-  realExpenseshNode.innerHTML = parseInt(realExpenses, 10)
-  realExpensesMonthhNode.innerHTML = parseInt(realExpenses / 12, 10)
+  realExpenseshNode.innerHTML = parseInt(expenses.total, 10)
+  realExpensesMonthhNode.innerHTML = parseInt(expenses.total / 12, 10)
 }
 
 function calculateRealExpenses () {
@@ -141,12 +149,20 @@ function calculateRealExpenses () {
   }
 
   const fares = charges * personalMileage / mileage
-  const totalFuel = fuel * personalMileage / mileage
+  const totalFuel = fuelType === 'fuel_employee' ? 0 : fuel * personalMileage / mileage
 
-  return fares + totalFuel
+  return {
+    total: fares + totalFuel,
+    depreciation,
+    charges
+  }
 }
 
-function showFormulas () {
+function formatNumber (number, unit) {
+  return `<small style="color: #999"><i>${ number.toLocaleString() }${ unit || '' }</i></small>`
+}
+
+function showFormulas (expenses) {
   let flatRateFormula, realExpenseFormula
 
   switch (autoType) {
@@ -155,8 +171,14 @@ function showFormulas () {
         ? "9 % du prix du véhicule TTC payé par l'entreprise"
         : "12 % du prix du véhicule TTC payé par l'entreprise"
 
-      realExpenseFormula =
-        '(amortissements 20 % + assurance + entretien) x km privés / nombre total de km + frais réels de carburant payés par l’entreprise'
+      realExpenseFormula = `
+        (amortissement 20% ${formatNumber(expenses.depreciation, '€')} + assurance ${formatNumber(insurance, '€')} + entretien ${formatNumber(servicing, '€')})<br />
+        x km privés ${formatNumber(personalMileage)} / nombre total de km ${formatNumber(mileage)}
+      `
+
+      if (fuelType === 'fuel_company') {
+        realExpenseFormula += `<br />+ frais réels de carburant utilisés pour l’usage privé payés par l’entreprise (carburant ${formatNumber(fuel, '€')} x km privés ${formatNumber(personalMileage)} / nombre total de km ${formatNumber(mileage)})`
+      }
       break
 
     case 'bought_old':
@@ -164,8 +186,14 @@ function showFormulas () {
         ? "6 % du prix du véhicule TTC payé par l'entreprise"
         : "9 % du prix du véhicule TTC payé par l'entreprise"
 
-      realExpenseFormula =
-        '(amortissements 10 % + assurance + entretien) x km privés / nombre total de km + frais réels de carburant payés par l’entreprise'
+      realExpenseFormula = `
+        (amortissement 10% ${formatNumber(expenses.depreciation, '€')} + assurance ${formatNumber(insurance, '€')} + entretien ${formatNumber(servicing, '€')})<br />
+        x km privés ${formatNumber(personalMileage)} / nombre total de km ${formatNumber(mileage)}
+      `
+
+      if (fuelType === 'fuel_company') {
+        realExpenseFormula += `<br />+ frais réels de carburant utilisés pour l’usage privé payés par l’entreprise (carburant ${formatNumber(fuel, '€')} x km privés ${formatNumber(personalMileage)} / nombre total de km ${formatNumber(mileage)})`
+      }
       break
 
     case 'leasing':
@@ -173,8 +201,14 @@ function showFormulas () {
         ? '30 % du coût annuel TTC pour l’entreprise (frais de location, d’assurance et d’entretien.)'
         : '40 % du coût annuel TTC pour l’entreprise (frais de location, d’assurance et d’entretien.)'
 
-      realExpenseFormula =
-        '(coût annuel de la location + assurance + entretien) x km privés / nombre total de km + frais réels de carburant payés par l’entreprise'
+      realExpenseFormula = `
+        (coût annuel de la location ${formatNumber(price)} + assurance ${formatNumber(insurance, '€')} + entretien ${formatNumber(servicing, '€')})<br />
+        x km privés ${formatNumber(personalMileage)} / nombre total de km ${formatNumber(mileage)}
+      `
+
+        if (fuelType === 'fuel_company') {
+          realExpenseFormula += `<br />+ frais réels de carburant utilisés pour l’usage privé payés par l’entreprise (carburant ${formatNumber(fuel, '€')} x km privés ${formatNumber(personalMileage)} / nombre total de km) ${formatNumber(mileage)}`
+        }
       break
   }
 
