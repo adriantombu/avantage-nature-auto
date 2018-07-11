@@ -9,11 +9,13 @@ const personalMileageNode = document.getElementById('personal_mileage')
 const flatRateNode = document.getElementById('flat_rate')
 const flatRateMonthNode = document.getElementById('flat_rate_month')
 const flatRatFormulahNode = document.getElementById('flat_rate_formula')
+const flatRateContainerNode2 = document.getElementById('flat_rate_container_2')
+const flatRateNode2 = document.getElementById('flat_rate2')
+const flatRateMonthNode2 = document.getElementById('flat_rate_month2')
+const flatRatFormulahNode2 = document.getElementById('flat_rate_formula2')
 const realExpenseshNode = document.getElementById('real_expenses')
 const realExpensesMonthhNode = document.getElementById('real_expenses_month')
-const realExpensesFormulahNode = document.getElementById(
-  'real_expenses_formula'
-)
+const realExpensesFormulahNode = document.getElementById('real_expenses_formula')
 
 // Initialize values
 let autoType = document.querySelector('input[name="autoType[]"]:checked').value
@@ -98,38 +100,58 @@ function calculate () {
   })
 
   let flatRate = 0
+  let flatRate2 = null
 
   switch (autoType) {
     case 'bought_new':
-      flatRate = fuelType === 'fuel_employee'
-        ? price / 100 * 9
-        : price / 100 * 12
+      if (fuelType === 'fuel_employee') {
+        flatRate = price / 100 * 9
+      } else {
+        flatRate = price / 100 * 12
+        flatRate2 = (price / 100 * 9) + (fuel * personalMileage / mileage)
+      }
       break
 
     case 'bought_old':
-      flatRate = fuelType === 'fuel_employee'
-        ? price / 100 * 6
-        : price / 100 * 9
+      if (fuelType === 'fuel_employee') {
+        flatRate = price / 100 * 6
+      } else {
+        flatRate = price / 100 * 9
+        flatRate2 = (price / 100 * 6) + (fuel * personalMileage / mileage)
+      }
       break
 
     case 'leasing':
-      flatRate = fuelType === 'fuel_employee'
-        ? price / 100 * 30
-        : price / 100 * 40
+      if (fuelType === 'fuel_employee') {
+        flatRate = (price + insurance + servicing) / 100 * 30
+      } else {
+        flatRate = (price + insurance + servicing) / 100 * 40
+        flatRate2 = ((price + insurance + servicing) / 100 * 30) + (fuel * personalMileage / mileage)
+      }
       break
   }
 
   const expenses = calculateRealExpenses()
 
-  showFormulas(expenses)
+  showFormulas(expenses, flatRate2)
 
   flatRateNode.innerHTML = parseInt(flatRate, 10)
   flatRateMonthNode.innerHTML = parseInt(flatRate / 12, 10)
+
+  if (flatRate2 !== null) {
+    flatRateNode2.innerHTML = parseInt(flatRate2, 10)
+    flatRateMonthNode2.innerHTML = parseInt(flatRate2 / 12, 10)
+
+    flatRateContainerNode2.style.display = 'block'
+  } else {
+    flatRateContainerNode2.style.display = 'none'
+  }
+
   realExpenseshNode.innerHTML = parseInt(expenses.total, 10)
   realExpensesMonthhNode.innerHTML = parseInt(expenses.total / 12, 10)
 }
 
-function calculateRealExpenses () {
+function calculateRealExpenses (flatRate2) {
   let depreciation, charges
 
   switch (autoType) {
@@ -162,14 +184,15 @@ function formatNumber (number, unit) {
   return `<small style="color: #999"><i>${ number.toLocaleString() }${ unit || '' }</i></small>`
 }
 
-function showFormulas (expenses) {
-  let flatRateFormula, realExpenseFormula
+function showFormulas (expenses, flatRate2) {
+  let flatRateFormula, realExpenseFormula, flatRateFormula2
+  const realExpenseFuelText = `<br />+ frais réels de carburant utilisés pour l’usage privé payés par l’entreprise (carburant ${formatNumber(fuel, '€')} x km privés ${formatNumber(personalMileage)} / nombre total de km ${formatNumber(mileage)})`
 
   switch (autoType) {
     case 'bought_new':
       flatRateFormula = fuelType === 'fuel_employee'
-        ? "9 % du prix du véhicule TTC payé par l'entreprise"
-        : "12 % du prix du véhicule TTC payé par l'entreprise"
+        ? `9 % du prix du véhicule TTC payé par l'entreprise ${formatNumber(price / 100 * 9, '€')}`
+        : `12 % du prix du véhicule TTC payé par l'entreprise ${formatNumber(price / 100 * 12, '€')}`
 
       realExpenseFormula = `
         (amortissement 20% ${formatNumber(expenses.depreciation, '€')} + assurance ${formatNumber(insurance, '€')} + entretien ${formatNumber(servicing, '€')})<br />
@@ -177,14 +200,20 @@ function showFormulas (expenses) {
       `
 
       if (fuelType === 'fuel_company') {
-        realExpenseFormula += `<br />+ frais réels de carburant utilisés pour l’usage privé payés par l’entreprise (carburant ${formatNumber(fuel, '€')} x km privés ${formatNumber(personalMileage)} / nombre total de km ${formatNumber(mileage)})`
+        realExpenseFormula += `${realExpenseFuelText}`
+
+        if (flatRate2 !== null) {
+          flatRateFormula2 = `
+            9 % du prix du véhicule TTC payé par l'entreprise ${formatNumber(price / 100 * 9, '€')}
+            ${realExpenseFuelText}`
+        }
       }
       break
 
     case 'bought_old':
       flatRateFormula = fuelType === 'fuel_employee'
-        ? "6 % du prix du véhicule TTC payé par l'entreprise"
-        : "9 % du prix du véhicule TTC payé par l'entreprise"
+        ? `6 % du prix du véhicule TTC payé par l'entreprise ${formatNumber(price / 100 * 6, '€')}`
+        : `9 % du prix du véhicule TTC payé par l'entreprise ${formatNumber(price / 100 * 9, '€')}`
 
       realExpenseFormula = `
         (amortissement 10% ${formatNumber(expenses.depreciation, '€')} + assurance ${formatNumber(insurance, '€')} + entretien ${formatNumber(servicing, '€')})<br />
@@ -192,14 +221,20 @@ function showFormulas (expenses) {
       `
 
       if (fuelType === 'fuel_company') {
-        realExpenseFormula += `<br />+ frais réels de carburant utilisés pour l’usage privé payés par l’entreprise (carburant ${formatNumber(fuel, '€')} x km privés ${formatNumber(personalMileage)} / nombre total de km ${formatNumber(mileage)})`
+        realExpenseFormula += `${realExpenseFuelText}`
+
+        if (flatRate2 !== null) {
+          flatRateFormula2 = `
+            6 % du prix du véhicule TTC payé par l'entreprise ${formatNumber(price / 100 * 6, '€')}
+            ${realExpenseFuelText}`
+        }
       }
       break
 
     case 'leasing':
       flatRateFormula = fuelType === 'fuel_employee'
-        ? '30 % du coût annuel TTC pour l’entreprise (frais de location, d’assurance et d’entretien.)'
-        : '40 % du coût annuel TTC pour l’entreprise (frais de location, d’assurance et d’entretien.)'
+        ? `30 % du coût annuel TTC pour l’entreprise (frais de location, d’assurance et d’entretien.) ${formatNumber(expenses.charges / 100 * 30, '€')}`
+        : `40 % du coût annuel TTC pour l’entreprise (frais de location, d’assurance et d’entretien.) ${formatNumber(expenses.charges / 100 * 40, '€')}`
 
       realExpenseFormula = `
         (coût annuel de la location ${formatNumber(price)} + assurance ${formatNumber(insurance, '€')} + entretien ${formatNumber(servicing, '€')})<br />
@@ -208,10 +243,20 @@ function showFormulas (expenses) {
 
         if (fuelType === 'fuel_company') {
           realExpenseFormula += `<br />+ frais réels de carburant utilisés pour l’usage privé payés par l’entreprise (carburant ${formatNumber(fuel, '€')} x km privés ${formatNumber(personalMileage)} / nombre total de km) ${formatNumber(mileage)}`
+
+          if (flatRate2 !== null) {
+            flatRateFormula2 = `
+              30 % du coût annuel TTC pour l’entreprise (frais de location, d’assurance et d’entretien.) ${formatNumber(expenses.charges / 100 * 30, '€')}
+              ${realExpenseFuelText}`
+          }
         }
       break
   }
 
   flatRatFormulahNode.innerHTML = flatRateFormula
   realExpensesFormulahNode.innerHTML = realExpenseFormula
+
+  if (flatRateFormula2) {
+    flatRatFormulahNode2.innerHTML = flatRateFormula2
+  }
 }
